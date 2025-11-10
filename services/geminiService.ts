@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type } from '@google/genai';
 import type { ScenarioCard } from '../types';
 
@@ -52,11 +51,8 @@ const complexResponseSchema = {
 };
 
 
-export const generateScenarios = async (theme: string, count: number, apiKey: string): Promise<ScenarioCard[]> => {
-  if (!apiKey) {
-    throw new Error("Gemini API key not provided.");
-  }
-  const ai = new GoogleGenAI({ apiKey });
+export const generateScenarios = async (theme: string, count: number): Promise<ScenarioCard[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const themeName = theme.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   
