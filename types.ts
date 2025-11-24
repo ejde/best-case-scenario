@@ -9,3 +9,5 @@ export interface Theme {
   value: string;
   emoji: string;
 }
+
+export type ModelType = 'gemini' | 'openai';

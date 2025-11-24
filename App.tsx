@@ -2,8 +2,10 @@ import React, { useState, useCallback } from 'react';
 import { ControlPanel } from './components/ControlPanel';
 import { CardGrid } from './components/CardGrid';
 import { Loader } from './components/Loader';
-import { generateScenarios } from './services/geminiService';
-import type { ScenarioCard, Theme } from './types';
+import { ModelSelector } from './components/ModelSelector';
+import { generateScenarios as generateGeminiScenarios } from './services/geminiService';
+import { generateScenarios as generateOpenAIScenarios } from './services/openaiService';
+import type { ScenarioCard, Theme, ModelType } from './types';
 import { THEMES, CARD_COUNTS } from './constants';
 
 const App: React.FC = () => {
@@ -13,6 +15,7 @@ const App: React.FC = () => {
   const [selectedTheme, setSelectedTheme] = useState<Theme>(THEMES[0]);
   const [customThemeText, setCustomThemeText] = useState<string>('');
   const [numCards, setNumCards] = useState<number>(CARD_COUNTS[0]);
+  const [selectedModel, setSelectedModel] = useState<ModelType>('gemini');
   const [showIntro, setShowIntro] = useState<boolean>(true);
 
   const handleGenerate = useCallback(async () => {
@@ -23,7 +26,8 @@ const App: React.FC = () => {
     const cardCountForApi = selectedTheme.value === 'complex_conundrums' ? 1 : numCards;
 
     try {
-      const scenarios = await generateScenarios(
+      const generator = selectedModel === 'openai' ? generateOpenAIScenarios : generateGeminiScenarios;
+      const scenarios = await generator(
         selectedTheme.value,
         cardCountForApi,
         selectedTheme.value === 'custom' ? customThemeText : undefined,
@@ -36,7 +40,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTheme, numCards, customThemeText]);
+  }, [selectedTheme, numCards, customThemeText, selectedModel]);
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
@@ -46,9 +50,15 @@ const App: React.FC = () => {
             Best-Case Scenario
           </h1>
           <p className="mt-2 text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            A little game of positivity to brighten up your day. 
+            A little game of positivity to brighten up your day.
           </p>
         </header>
+
+        <ModelSelector
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          disabled={isLoading}
+        />
 
         <ControlPanel
           themes={THEMES}
@@ -64,7 +74,7 @@ const App: React.FC = () => {
         />
 
         {isLoading && <Loader />}
-        
+
         {error && (
           <div className="mt-8 text-center bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative animate-fade-in" role="alert">
             <strong className="font-bold">Error: </strong>
@@ -80,7 +90,7 @@ const App: React.FC = () => {
 
         {!isLoading && cards.length > 0 && <CardGrid cards={cards} />}
       </main>
-    
+
     </div>
   );
 };
